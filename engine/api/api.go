@@ -23,12 +23,12 @@ import (
 	"github.com/ovh/cds/engine/api/event"
 	"github.com/ovh/cds/engine/api/feature"
 	"github.com/ovh/cds/engine/api/group"
+	"github.com/ovh/cds/engine/api/integration"
 	"github.com/ovh/cds/engine/api/mail"
 	"github.com/ovh/cds/engine/api/metrics"
 	"github.com/ovh/cds/engine/api/migrate"
 	"github.com/ovh/cds/engine/api/notification"
 	"github.com/ovh/cds/engine/api/objectstore"
-	"github.com/ovh/cds/engine/api/integration"
 	"github.com/ovh/cds/engine/api/purge"
 	"github.com/ovh/cds/engine/api/repositoriesmanager"
 	"github.com/ovh/cds/engine/api/secret"
@@ -225,6 +225,7 @@ type API struct {
 	Router              *Router
 	Config              Configuration
 	DBConnectionFactory *database.DBConnectionFactory
+	SharedStorage       objectstore.Driver
 	StartupTime         time.Time
 	Maintenance         bool
 	eventsBroker        *eventsBroker
@@ -531,8 +532,10 @@ func (a *API) Serve(ctx context.Context) error {
 		},
 	}
 
-	if err := objectstore.Initialize(ctx, cfg); err != nil {
-		return fmt.Errorf("cannot initialize storage: %v", err)
+	var errStorage error
+	a.SharedStorage, errStorage = objectstore.Init(ctx, cfg)
+	if errStorage != nil {
+		return fmt.Errorf("cannot initialize storage: %v", errStorage)
 	}
 
 	log.Info("Initializing database connection...")
