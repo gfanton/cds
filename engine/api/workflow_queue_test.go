@@ -796,8 +796,9 @@ func Test_postWorkflowJobStaticFilesHandler(t *testing.T) {
 	assert.Equal(t, 200, rec.Code)
 
 	vars = map[string]string{
-		"name":   url.PathEscape("mywebsite"),
-		"permID": fmt.Sprintf("%d", ctx.job.ID),
+		"name":            url.PathEscape("mywebsite"),
+		"integrationName": sdk.DefaultStorageIntegrationName,
+		"permProjectKey":  ctx.project.Key,
 	}
 
 	uri = router.GetRoute("POST", api.postWorkflowJobStaticFilesHandler, vars)
@@ -813,7 +814,8 @@ func Test_postWorkflowJobStaticFilesHandler(t *testing.T) {
 	test.NoError(t, errClose)
 
 	params := map[string]string{
-		"entrypoint": "index.html",
+		"entrypoint":   "index.html",
+		"nodeJobRunID": fmt.Sprintf("%d", ctx.job.ID),
 	}
 	req = assets.NewAuthentifiedMultipartRequestFromWorker(t, ctx.worker, "POST", uri, path.Join(os.TempDir(), "mystaticfile"), "mystaticfile", params)
 	rec = httptest.NewRecorder()
